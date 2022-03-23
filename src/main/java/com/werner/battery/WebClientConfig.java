@@ -17,7 +17,6 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient() {
         return WebClient.builder()
-                .baseUrl("https://enlighten.enphaseenergy.com")
                 .defaultHeader("e-auth-token", batteryProperties.eAuthToken())
                 .build();
     }

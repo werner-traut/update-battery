@@ -6,3 +6,12 @@ management:
 
 battery:
   e-auth-token: dddd
+  morning-reserve: 10
+  day-reserve: 30
+  night-reserve: 45
+  morning-enabled: true
+  day-enabled: true
+  night-enabled: true
+  morning-cron: "0 45 5 * * MON-FRI"
+  day-cron: "0 0 9 * * MON-FRI"
+  night-cron: "0 0 21 * * MON-FRI"

@@ -1,9 +1,11 @@
 package com.werner.battery;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,28 +17,56 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Slf4j
 public class BatteryApplication {
 
-
-    public static final int NEW_RESERVE_MORNING = 10;
-    public static final int NEW_RESERVE_NIGHT = 45;
+    @Value("${battery.morning-reserve}")
+    private String NEW_RESERVE_MORNING;
+    @Value("${battery.day-reserve}")
+    private String NEW_RESERVE_DAY;
+    @Value("${battery.night-reserve}")
+    private String NEW_RESERVE_NIGHT;
 
     private final WebClient webClient;
+    private final BatteryProperties batteryProperties;
 
-    public BatteryApplication(WebClient webClient) {
+    public BatteryApplication(WebClient webClient, BatteryProperties batteryProperties) {
         this.webClient = webClient;
+        this.batteryProperties = batteryProperties;
     }
 
     public static void main(String[] args) {
         SpringApplication.run(BatteryApplication.class, args);
     }
 
-    @Scheduled(cron = "0 45 5 * * MON-FRI", zone = "US/Arizona")
+    @Scheduled(cron = "${battery.morning-cron}", zone = "US/Arizona")
     public void updateBatteryMorning() {
-        updateReserve(NEW_RESERVE_MORNING);
+        if (batteryProperties.morningEnabled()) {
+            updateReserve(Integer.parseInt(NEW_RESERVE_MORNING));
+        }
     }
 
-    @Scheduled(cron = "0 0 21 * * MON-FRI", zone = "US/Arizona")
+    @Scheduled(cron = "${battery.day-cron}", zone = "US/Arizona")
+    public void updateBatteryDay() {
+        if (batteryProperties.dayEnabled()) {
+            updateReserve(Integer.parseInt(NEW_RESERVE_DAY));
+        }
+    }
+
+    @Scheduled(cron = "${battery.night-cron}", zone = "US/Arizona")
     public void updateBatteryNight() {
-        updateReserve(NEW_RESERVE_NIGHT);
+        if (batteryProperties.nightEnabled()) {
+            updateReserve(Integer.parseInt(NEW_RESERVE_NIGHT));
+        }
+    }
+
+    @Scheduled(fixedRate = 1000 * 60 * 25) //25 minutes
+    public void keepAppUp() {
+        HttpStatus statusCode = webClient.get()
+                .uri("https://update-battery.herokuapp.com/actuator/health")
+//                .uri("http://localhost:8080/actuator/health")
+                .retrieve()
+                .toEntity(Void.class)
+                .block()
+                .getStatusCode();
+        log.info("Pinged app and got {} status code", statusCode);
     }
 
     private void updateReserve(int newReserve) {
@@ -46,7 +76,7 @@ public class BatteryApplication {
         try {
             response = webClient
                     .put()
-                    .uri("/pv/settings/2537485/battery_config?usage=self-consumption&battery_backup_percentage=" + newReserve + "&operation_mode_sub_type=")
+                    .uri("https://enlighten.enphaseenergy.com/pv/settings/2537485/battery_config?usage=self-consumption&battery_backup_percentage=" + newReserve + "&operation_mode_sub_type=")
                     .retrieve()
                     .toEntity(BatteryResponse.class)
                     .block();
