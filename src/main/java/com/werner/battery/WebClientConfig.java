@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
-@Slf4j
 public class WebClientConfig {
 
     private final BatteryProperties batteryProperties;
@@ -17,7 +16,6 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient() {
-        log.info("Creating web client with {}", batteryProperties.eAuthToken());
         return WebClient.builder()
                 .baseUrl("https://enlighten.enphaseenergy.com")
                 .defaultHeader("e-auth-token", batteryProperties.eAuthToken())
