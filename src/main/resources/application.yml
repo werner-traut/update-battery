@@ -4,6 +4,7 @@ management:
       exposure:
         include: "*"
 
+
 battery:
   e-auth-token: dddd
   morning-reserve: 10
@@ -14,4 +15,8 @@ battery:
   night-enabled: true
   morning-cron: "0 45 5 * * MON-FRI"
   day-cron: "0 0 9 * * MON-FRI"
-  night-cron: "0 0 21 * * MON-FRI"
+  night-cron: "0 0 21 * * SUN-FRI"
+server:
+  error:
+    whitelabel:
+      enabled: false

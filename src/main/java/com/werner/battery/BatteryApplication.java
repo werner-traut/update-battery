@@ -9,11 +9,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Objects;
 
 @SpringBootApplication
 @EnableConfigurationProperties(BatteryProperties.class)
 @EnableScheduling
+@RestController
 @Slf4j
 public class BatteryApplication {
 
@@ -23,6 +29,8 @@ public class BatteryApplication {
     private String NEW_RESERVE_DAY;
     @Value("${battery.night-reserve}")
     private String NEW_RESERVE_NIGHT;
+
+    private Boolean keepAppUp = true;
 
     private final WebClient webClient;
     private final BatteryProperties batteryProperties;
@@ -59,20 +67,29 @@ public class BatteryApplication {
 
     @Scheduled(fixedRate = 1000 * 60 * 25) //25 minutes
     public void keepAppUp() {
-        HttpStatus statusCode = webClient.get()
-                .uri("https://update-battery.herokuapp.com/actuator/health")
-//                .uri("http://localhost:8080/actuator/health")
-                .retrieve()
-                .toEntity(Void.class)
-                .block()
-                .getStatusCode();
-        log.info("Pinged app and got {} status code", statusCode);
+        if (keepAppUp) {
+            HttpStatus statusCode = Objects.requireNonNull(webClient.get()
+                            .uri("https://update-battery.herokuapp.com/actuator/health")
+                            //                .uri("http://localhost:8080/actuator/health")
+                            .retrieve()
+                            .toEntity(Void.class)
+                            .block())
+                    .getStatusCode();
+            log.info("Pinged app and got {} status code", statusCode);
+        }
+    }
+
+    @GetMapping("/keepup/{flag}")
+    public ResponseEntity<String> disableKeepAppUp(@PathVariable Boolean flag) {
+        log.info("Setting keepAppUp to {}", flag);
+        keepAppUp = flag;
+        return ResponseEntity.ok().build();
     }
 
     private void updateReserve(int newReserve) {
         log.info("Updating battery reserve to {}", newReserve);
 
-        ResponseEntity<BatteryResponse> response = null;
+        ResponseEntity<BatteryResponse> response;
         try {
             response = webClient
                     .put()
@@ -85,7 +102,11 @@ public class BatteryApplication {
             throw e;
         }
 
-        log.info("Response received: {}, with status code: {}", response.getBody().message(), response.getStatusCode());
+        if (response != null && response.getBody() != null) {
+            log.info("Response received: {}, with status code: {}", response.getBody().message(), response.getStatusCode());
+        } else {
+            log.error("Response is null {}", response);
+        }
     }
 
     record BatteryResponse(String message) {}
