@@ -83,7 +83,8 @@ public class BatteryApplication {
     public ResponseEntity<String> disableKeepAppUp(@PathVariable Boolean flag) {
         log.info("Setting keepAppUp to {}", flag);
         keepAppUp = flag;
-        return ResponseEntity.ok().build();
+        String result = "Updated to " + keepAppUp;
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     private void updateReserve(int newReserve) {
