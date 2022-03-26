@@ -16,6 +16,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 
 @SpringBootApplication
@@ -69,7 +71,7 @@ public class BatteryApplication {
 
     @Scheduled(fixedRate = 1000 * 60 * 25) //25 minutes
     public void keepAppUp() {
-        LocalDateTime date = LocalDateTime.now();
+        var date = ZonedDateTime.now(ZoneId.of("US/Arizona"));
         if (date.getDayOfWeek() == DayOfWeek.FRIDAY && date.getHour() > 9) {
             keepAppUp = false;
         }
