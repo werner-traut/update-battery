@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @SpringBootApplication
@@ -67,6 +69,10 @@ public class BatteryApplication {
 
     @Scheduled(fixedRate = 1000 * 60 * 25) //25 minutes
     public void keepAppUp() {
+        LocalDateTime date = LocalDateTime.now();
+        if (date.getDayOfWeek() == DayOfWeek.FRIDAY && date.getHour() > 9) {
+            keepAppUp = false;
+        }
         if (keepAppUp) {
             HttpStatus statusCode = Objects.requireNonNull(webClient.get()
                             .uri("https://update-battery.herokuapp.com/actuator/health")
