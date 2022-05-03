@@ -1,6 +1,8 @@
 package com.werner.battery;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.util.retry.Retry;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.DayOfWeek;
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -82,11 +84,12 @@ public class BatteryApplication {
                             //                .uri("http://localhost:8080/actuator/health")
                             .retrieve()
                             .toEntity(Void.class)
+                            .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(3)))
                             .block())
                     .getStatusCode();
             log.info("Pinged app and got {} status code", statusCode);
             } catch (Exception e) {
-                log.error("Error pinging app", e);
+                log.error("Error pinging the app", e);
             }
             
         }
