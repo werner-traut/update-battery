@@ -76,7 +76,8 @@ public class BatteryApplication {
             keepAppUp = false;
         }
         if (keepAppUp) {
-            HttpStatus statusCode = Objects.requireNonNull(webClient.get()
+            try {
+                HttpStatus statusCode = Objects.requireNonNull(webClient.get()
                             .uri("https://update-battery.herokuapp.com/actuator/health")
                             //                .uri("http://localhost:8080/actuator/health")
                             .retrieve()
@@ -84,6 +85,10 @@ public class BatteryApplication {
                             .block())
                     .getStatusCode();
             log.info("Pinged app and got {} status code", statusCode);
+            } catch (Exception e) {
+                log.error("Error pinging app", e);
+            }
+            
         }
     }
 

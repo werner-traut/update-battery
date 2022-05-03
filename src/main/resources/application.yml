@@ -13,9 +13,9 @@ battery:
   morning-enabled: true
   day-enabled: true
   night-enabled: true
-  morning-cron: "0 45 5 * * MON-FRI"
+  morning-cron: "0 00 5 * * MON-FRI"
   day-cron: "0 0 9 * * MON-FRI"
-  night-cron: "0 0 21 * * SUN-FRI"
+  night-cron: "0 30 20 * * SUN-FRI"
 server:
   error:
     whitelabel:
